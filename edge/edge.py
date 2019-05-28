@@ -20,6 +20,7 @@ class Edge:
         self.capacity           = capacity
         self.max_servers        = max_servers
         self.cost               = cost
+        self.active_servers     = 0
     
     # def append_fog_list(self, fog = Fog):
     #     self.fog_list.append(copy.deepcopy(fog))
