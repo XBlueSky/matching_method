@@ -15,6 +15,7 @@ class Fog:
         self.fog_transmission_rate      = fog_transmission_rate
         self.max_vehicles               = current_vehicles + arrival_rate - departure_rate
         self.used_vehicles              = 0
+        self.traffic                    = 0
     
     def computation_latency(self, traffic, used_vehicles):
         return m_m_c_latency(used_vehicles, traffic, self.capacity)
@@ -27,6 +28,9 @@ class Fog:
     
     def fog_cost(self):
         return self.used_vehicles * self.cost
+    
+    def fog_capacity(self):
+        return self.used_vehicles * self.capacity
     
     def clear(self):
         if self.available:
@@ -43,6 +47,7 @@ class Fog:
             if self.max_vehicles - e['used_vehicles'] >= 0:
                 self.max_vehicles = self.max_vehicles - e['used_vehicles']
                 self.used_vehicles = self.used_vehicles + e['used_vehicles']
+                self.traffic = self.traffic + e['traffic']
                 self.vehicle_to_edge.append({'edge': e['index'], 'used_vehicles': e['used_vehicles']})
                 response_list.append(e['index'])
 

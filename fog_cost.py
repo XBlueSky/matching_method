@@ -90,7 +90,7 @@ for fog_cost in range(1, 21):
 
         # Fog choose the edge from its preference list
         for p in proposal_list:
-            fog_set[p['f_id']].edge_table.append({'index': p['e_id'], 'used_vehicles': p['used_vehicles'], 'cmp_value': p['cmp_value']})
+            fog_set[p['f_id']].edge_table.append({'index': p['e_id'], 'used_vehicles': p['used_vehicles'], 'cmp_value': p['cmp_value'], 'traffic': p['traffic']})
 
         print(proposal_list)
         response_list = []

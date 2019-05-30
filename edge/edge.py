@@ -21,6 +21,8 @@ class Edge:
         self.max_servers        = max_servers
         self.cost               = cost
         self.active_servers     = 0
+        self.max_traffic        = 0
+        self.fog_traffic        = 0
     
     # def append_fog_list(self, fog = Fog):
     #     self.fog_list.append(copy.deepcopy(fog))
@@ -42,6 +44,9 @@ class Edge:
 
     def edge_cost(self):
         return self.active_servers * self.cost
+    
+    def edge_capacity(self):
+        return self.active_servers * self.capacity
 
     def fog_set_cost(self):
         return sum([f.fog_cost() for f in self.fog_list])
@@ -68,7 +73,7 @@ class Edge:
             return None
 
         else:
-            return {'e_id': self.index, 'f_id': self.preference_list[0]['index'], 'used_vehicles': self.preference_list[0]['used_vehicles'], 'cmp_value': cmp_value}
+            return {'e_id': self.index, 'f_id': self.preference_list[0]['index'], 'used_vehicles': self.preference_list[0]['used_vehicles'], 'cmp_value': cmp_value, 'traffic': self.fog_traffic}
 
     def confirm(self):
         self.greedy_algortithm(self.traffic, self.max_latency, self.least_error, -1)
@@ -97,13 +102,13 @@ class Edge:
         # optmized cost in edge and fogs
         self.greedy_algortithm(self.traffic, self.max_latency, self.least_error, -1)
         all_cost = self.edge_cost() + self.fog_set_cost()
-        
+
         self.rebuild_preference()
         # There is no fog which this edge wants to contend
         if not self.preference_list:
             self.available = False
             return -1
-
+        self.fog_traffic = self.fog_list[self.preference_list[0]['index']].max_traffic
         self.clearAll()
 
         # optmized cost in edge and fogs w/o exception fog

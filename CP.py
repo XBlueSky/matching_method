@@ -19,17 +19,17 @@ args = parser.parse_args()
 constant = Constant(1250, 1250, 1)
 
 xaxis_list              = []
-total_cost_list         = []
-total_edge_cost_list    = []
-total_fog_cost_list     = []
+total_CP_list         = []
+total_edge_CP_list    = []
+total_fog_CP_list     = []
 total_1_list            = []
 total_3_list            = []
 total_5_list            = []
 cost_capacity_parm      = 1
 
-for server_num in range(1, 7, 2):
-# for server_num in range(1, 2):
-    for traffic in range(0, 200, 10):
+# for server_num in range(1, 7, 2):
+for server_num in range(1, 2):
+    for traffic in range(0, 210, 10):
         # Variable: traffic
         if server_num == 1:
             xaxis_list.append(traffic)
@@ -133,19 +133,34 @@ for server_num in range(1, 7, 2):
 
         # Collect total edge cost from edge set
         total_edge_cost = 0
+        total_edge__traffic = 0
         for e in edge_set:
             # e.display()
             total_edge_cost = total_edge_cost + e.edge_cost()
-        total_edge_cost_list.append(total_edge_cost)
+            total_edge__traffic = total_edge__traffic + e.max_traffic
+        
+        if total_edge_cost == 0:
+            total_edge_CP_list.append(0)
+        else:
+            total_edge_CP_list.append(total_edge__traffic / total_edge_cost)
         
         # Collect total fog cost from edge set
         total_fog_cost = 0
+        total_fog_traffic = 0
         for f in fog_set:
             total_fog_cost = total_fog_cost + f.fog_cost()
-        print(total_fog_cost)
-        total_fog_cost_list.append(total_fog_cost)
+            total_fog_traffic = total_fog_traffic + f.traffic
+        # print(total_fog_cost)
+        if total_fog_cost == 0:
+            total_fog_CP_list.append(0)
+        else:
+            total_fog_CP_list.append(total_fog_traffic / total_fog_cost)
 
-        total_cost_list.append(total_edge_cost + total_fog_cost)
+        if (total_edge_cost + total_fog_cost) == 0:
+            total_CP_list.append(0)
+        else:
+            total_CP_list.append(sum(traffic_set) / (total_edge_cost + total_fog_cost) )
+        
         if server_num == 1:
             total_1_list.append(total_edge_cost + total_fog_cost)
         elif server_num == 3:
@@ -166,42 +181,42 @@ TOOLTIPS = [
         ("cost", "$y"),
     ]
 
-p = figure(plot_width=600, plot_height=400, x_axis_label='Araival Traffic Mean (mb/s)', y_axis_label='Total Cost ($)', tooltips=TOOLTIPS)
+p = figure(plot_width=600, plot_height=400, x_axis_label='Araival Traffic Mean (mb/s)', y_axis_label='CP value (mb/s/$)', tooltips=TOOLTIPS)
 
 # Default
-# p.line(xaxis_list, total_cost_list, legend="Total Cost", line_width=2, line_color="red")
-# p.line(xaxis_list, total_edge_cost_list, legend="Edge Cost", line_width=1, line_color="tomato")
-# p.line(xaxis_list, total_fog_cost_list, legend="Fog Cost", line_width=1, line_color="orange")
+p.line(xaxis_list, total_CP_list, legend="Total CP value", line_width=2, line_color="red")
+p.line(xaxis_list, total_edge_CP_list, legend="Edge CP value", line_width=1, line_color="tomato")
+p.line(xaxis_list, total_fog_CP_list, legend="Fog CP value", line_width=1, line_color="orange")
 
-# p.circle(xaxis_list, total_cost_list, legend="Total Cost", fill_color="red", line_color="red", size=7)
-# p.x(xaxis_list, total_edge_cost_list, legend="Edge Cost", line_color="tomato", size=5)
-# p.circle(xaxis_list, total_fog_cost_list, legend="Fog Cost", fill_color="white", line_color="orange", size=5)
+p.circle(xaxis_list, total_CP_list, legend="Total CP value", fill_color="red", line_color="red", size=7)
+p.x(xaxis_list, total_edge_CP_list, legend="Edge CP value", line_color="tomato", size=5)
+p.circle(xaxis_list, total_fog_CP_list, legend="Fog CP value", fill_color="white", line_color="orange", size=5)
 
-p.line(xaxis_list, total_1_list, legend="One Server Each Edge", line_width=2, line_color="red")
-p.line(xaxis_list, total_3_list, legend="Three Server Each Edge", line_width=1, line_color="tomato")
-p.line(xaxis_list, total_5_list, legend="Five Server Each Edge", line_width=1, line_color="orange")
+# p.line(xaxis_list, total_1_list, legend="One Server Each Edge", line_width=2, line_color="red")
+# p.line(xaxis_list, total_3_list, legend="Three Server Each Edge", line_width=1, line_color="tomato")
+# p.line(xaxis_list, total_5_list, legend="Five Server Each Edge", line_width=1, line_color="orange")
 
-p.circle(xaxis_list, total_1_list, legend="One Server Each Edge", fill_color="red", line_color="red", size=7)
-p.x(xaxis_list, total_3_list, legend="Three Server Each Edge", line_color="tomato", size=5)
-p.circle(xaxis_list, total_5_list, legend="Five Server Each Edge", fill_color="white", line_color="orange", size=5)
+# p.circle(xaxis_list, total_1_list, legend="One Server Each Edge", fill_color="red", line_color="red", size=7)
+# p.x(xaxis_list, total_3_list, legend="Three Server Each Edge", line_color="tomato", size=5)
+# p.circle(xaxis_list, total_5_list, legend="Five Server Each Edge", fill_color="white", line_color="orange", size=5)
 
 p.xaxis.axis_label_text_font_size = "15pt"
 p.yaxis.axis_label_text_font_size = "15pt"
 p.xaxis.major_label_text_font_size = "12pt"
 p.yaxis.major_label_text_font_size = "12pt"
-p.legend.location = "top_left"
+p.legend.location = "bottom_right"
 
 p.output_backend = "svg"
-export_svgs(p, filename="graph/traffic/edge_server_num/0-200_normal_S.svg")
+export_svgs(p, filename="graph/CP/edge_fog_distribution/0-200_normal_S.svg")
 
-with open('graph/traffic/edge_server_num/csv/0-200_normal_S.csv', 'w', newline='') as csvfile:
+with open('graph/CP/edge_fog_distribution/csv/0-200_normal_S.csv', 'w', newline='') as csvfile:
 
     # space for delimiter
     writer = csv.writer(csvfile, delimiter=' ')
 
-    # writer.writerow(['Traffic', 'Total Cost', 'Edge Cost', 'Fog Cost'])
-    writer.writerow(['Traffic', 'Total Cost of One Server Each Edge', 'Total Cost of Three Server Each Edge', 'Total Cost of Five Server Each Edge'])
+    writer.writerow(['Traffic', 'Total CP', 'Edge CP', 'Fog CP'])
+    # writer.writerow(['Traffic', 'Total Cost of One Server Each Edge', 'Total Cost of Three Server Each Edge', 'Total Cost of Five Server Each Edge'])
     
     for i in range(len(xaxis_list)):
-        # writer.writerow([xaxis_list[i], total_cost_list[i], total_edge_cost_list[i], total_fog_cost_list[i]])
-        writer.writerow([xaxis_list[i], total_1_list[i], total_3_list[i], total_5_list[i]])
+        writer.writerow([xaxis_list[i], total_CP_list[i], total_edge_CP_list[i], total_fog_CP_list[i]])
+        # writer.writerow([xaxis_list[i], total_1_list[i], total_3_list[i], total_5_list[i]])
