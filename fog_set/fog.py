@@ -15,6 +15,7 @@ class Fog:
         self.fog_transmission_rate      = fog_transmission_rate
         self.max_vehicles               = current_vehicles + arrival_rate - departure_rate
         self.used_vehicles              = 0
+        self.sum_used_vehicles          = 0
         self.traffic                    = 0
     
     def computation_latency(self, traffic, used_vehicles):
@@ -35,6 +36,7 @@ class Fog:
     def clear(self):
         if self.available:
             self.max_traffic    = 0
+            self.traffic        = 0
             self.used_vehicles  = 0
             self.latency        = 0
             self.used           = False
@@ -53,6 +55,13 @@ class Fog:
 
         self.edge_table.clear()
         return response_list
+
+    def trivial_algorithm(self, traffic, max_latency, least_error):
+        vehicles = self.used_vehicles
+        self.traffic_algorithm(traffic, max_latency, least_error)
+        self.max_vehicles = self.max_vehicles - self.used_vehicles
+        self.used_vehicles = self.used_vehicles + vehicles
+        return self.max_traffic
 
     # offloading computation from edge to fog
     def traffic_algorithm(self, traffic, max_latency, least_error):

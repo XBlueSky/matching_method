@@ -163,6 +163,13 @@ class Edge:
             empty_list.clear()
             bundle_list.clear()
 
+    def trivial_algorithm(self):
+        self.traffic_algorithm(self.traffic, self.max_latency, self.least_error)
+        if self.max_traffic > 0:
+            self.used = True
+        self.traffic = self.traffic - self.max_traffic
+        return self.traffic
+
     # local computation in edge
     def traffic_algorithm(self, traffic, max_latency, least_error):
         
