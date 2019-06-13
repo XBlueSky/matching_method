@@ -26,7 +26,7 @@ total_1_list            = []
 total_3_list            = []
 total_5_list            = []
 cost_capacity_parm      = 1
-
+loop                    = 50
 # for server_num in range(1, 7, 2):
 for server_num in range(1, 2):
     for traffic in range(0, 1050, 50):
@@ -38,7 +38,7 @@ for server_num in range(1, 2):
         total_fog_CP = 0
         total_CP = 0
 
-        for iteration in range(10):
+        for iteration in range(loop):
 
             traffic_set     = []
             max_servers_set = []
@@ -163,9 +163,9 @@ for server_num in range(1, 2):
             fog_set.clear()
 
         
-        total_edge_CP_list.append(total_edge_CP / 10)
-        total_fog_CP_list.append(total_fog_CP / 10)
-        total_CP_list.append(total_CP / 10)
+        total_edge_CP_list.append(total_edge_CP / loop)
+        total_fog_CP_list.append(total_fog_CP / loop)
+        total_CP_list.append(total_CP / loop)
         
         
         if server_num == 1:

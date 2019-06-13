@@ -26,6 +26,7 @@ total_1_list            = []
 total_2_list            = []
 total_4_list            = []
 cost_capacity_parm      = 1
+loop                    = 50
 
 for server_num in [1, 2, 4]:
 # for server_num in range(1, 2):
@@ -37,8 +38,8 @@ for server_num in [1, 2, 4]:
         total_edge_cost = 0
         total_fog_cost = 0
 
-        for iteration in range(10):
-        
+        for iteration in range(loop):
+            print(str(traffic) + "-" + str(iteration))
             traffic_set     = []
             max_servers_set = []
 
@@ -108,12 +109,12 @@ for server_num in [1, 2, 4]:
                 for p in proposal_list:
                     fog_set[p['f_id']].edge_table.append({'index': p['e_id'], 'used_vehicles': p['used_vehicles'], 'cmp_value': p['cmp_value'], 'traffic': p['traffic']})
 
-                print(proposal_list)
+                # print(proposal_list)
                 response_list = []
                 for f in fog_set:
                     response_list.append(f.response())
                 response = [item for sublist in response_list for item in sublist]
-                print(response)
+                # print(response)
                 # This edge gets response from the corresponding fog
                 for e in edge_set:
                     if e.available:
@@ -149,15 +150,15 @@ for server_num in [1, 2, 4]:
             edge_set.clear()
             fog_set.clear()
 
-        total_edge_cost_list.append(total_edge_cost/10)
-        total_fog_cost_list.append(total_fog_cost/10)
-        total_cost_list.append((total_edge_cost + total_fog_cost)/10)
+        total_edge_cost_list.append(total_edge_cost/loop)
+        total_fog_cost_list.append(total_fog_cost/loop)
+        total_cost_list.append((total_edge_cost + total_fog_cost)/loop)
         if server_num == 1:
-            total_1_list.append((total_edge_cost + total_fog_cost)/10)
+            total_1_list.append((total_edge_cost + total_fog_cost)/loop)
         elif server_num == 2:
-            total_2_list.append((total_edge_cost + total_fog_cost)/10)
+            total_2_list.append((total_edge_cost + total_fog_cost)/loop)
         else:
-            total_4_list.append((total_edge_cost + total_fog_cost)/10)
+            total_4_list.append((total_edge_cost + total_fog_cost)/loop)
 
 
 # Graphic Design in Bokeh
@@ -181,13 +182,13 @@ p = figure(plot_width=600, plot_height=400, x_axis_label='Araival Traffic Mean (
 # p.x(xaxis_list, total_edge_cost_list, legend="Edge Cost", line_color="tomato", size=5)
 # p.circle(xaxis_list, total_fog_cost_list, legend="Fog Cost", fill_color="white", line_color="orange", size=5)
 
-p.line(xaxis_list, total_1_list, legend="One Server Each Edge", line_width=2, line_color="red")
-p.line(xaxis_list, total_2_list, legend="Two Server Each Edge", line_width=1, line_color="tomato")
-p.line(xaxis_list, total_4_list, legend="Four Server Each Edge", line_width=1, line_color="orange")
+p.line(xaxis_list, total_1_list, legend="Nᵢ = 1", line_width=2, line_color="red")
+p.line(xaxis_list, total_2_list, legend="Nᵢ = 2", line_width=1, line_color="tomato")
+p.line(xaxis_list, total_4_list, legend="Nᵢ = 4", line_width=1, line_color="orange")
 
-p.circle(xaxis_list, total_1_list, legend="One Server Each Edge", fill_color="red", line_color="red", size=7)
-p.x(xaxis_list, total_2_list, legend="Two Server Each Edge", line_color="tomato", size=5)
-p.circle(xaxis_list, total_4_list, legend="Four Server Each Edge", fill_color="white", line_color="orange", size=5)
+p.circle(xaxis_list, total_1_list, legend="Nᵢ = 1", fill_color="red", line_color="red", size=7)
+p.x(xaxis_list, total_2_list, legend="Nᵢ = 2", line_color="tomato", size=5)
+p.circle(xaxis_list, total_4_list, legend="Nᵢ = 4", fill_color="white", line_color="orange", size=5)
 
 p.xaxis.axis_label_text_font_size = "15pt"
 p.yaxis.axis_label_text_font_size = "15pt"

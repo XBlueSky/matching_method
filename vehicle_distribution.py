@@ -28,13 +28,14 @@ total_normal_list       = []
 total_exponential_list  = []
 cost_capacity_parm      = 1
 server_num              = 1
-total_vehicles          = 400
+total_vehicles          = 350
+loop                    = 50
 
 for distribution_type in range(1, 3):
     # for sd in range(0, 40):
     #     traffic = 1000
     #     xaxis_list.append(sd)
-    for traffic in range(0, 520, 20):
+    for traffic in range(0, 420, 20):
     #     sd = 15
         # Variable: traffic
         if distribution_type == 1:
@@ -43,8 +44,8 @@ for distribution_type in range(1, 3):
         total_edge_cost = 0
         total_fog_cost = 0
 
-        for iteration in range(10):
-            
+        for iteration in range(loop):
+            print(str(traffic)+"-"+str(iteration))
             traffic_set     = []
             max_servers_set = []
 
@@ -105,10 +106,10 @@ for distribution_type in range(1, 3):
                     # departure_rate_set = list( map( int, line.split()))
             if distribution_type == 1:
                 current_vehicles_set = Distribution.uniform(total_vehicles, len(capacity_set))
-                print(current_vehicles_set)
+                # print(current_vehicles_set)
             elif distribution_type == 2:
                 current_vehicles_set = Distribution.exponential(total_vehicles, len(capacity_set))
-                print(current_vehicles_set)
+                # print(current_vehicles_set)
 
             for i in range(len(capacity_set)):
                 fog_set.append(Fog(i, capacity_set[i], cost_set[i], current_vehicles_set[i], arrival_rate_set[i], departure_rate_set[i], constant.edge_transmission_rate, constant.fog_transmission_rate))
@@ -132,12 +133,12 @@ for distribution_type in range(1, 3):
                 for p in proposal_list:
                     fog_set[p['f_id']].edge_table.append({'index': p['e_id'], 'used_vehicles': p['used_vehicles'], 'cmp_value': p['cmp_value'], 'traffic': p['traffic']})
 
-                print(proposal_list)
+                # print(proposal_list)
                 response_list = []
                 for f in fog_set:
                     response_list.append(f.response())
                 response = [item for sublist in response_list for item in sublist]
-                print(response)
+                # print(response)
                 # This edge gets response from the corresponding fog
                 for e in edge_set:
                     if e.available:
@@ -176,9 +177,9 @@ for distribution_type in range(1, 3):
             fog_set.clear()
 
         if distribution_type == 1:
-            total_uniform_list.append((total_edge_cost + total_fog_cost)/10)
+            total_uniform_list.append((total_edge_cost + total_fog_cost)/loop)
         elif distribution_type == 2:
-            total_exponential_list.append((total_edge_cost + total_fog_cost)/10)
+            total_exponential_list.append((total_edge_cost + total_fog_cost)/loop)
 
 # Graphic Design in Bokeh
 
@@ -190,7 +191,7 @@ TOOLTIPS = [
         ("cost", "$y"),
     ]
 
-p = figure(plot_width=600, plot_height=400, x_axis_label='Araival Traffic Mean (mb/s)', y_axis_label='CP value (mb/s / $)', tooltips=TOOLTIPS)
+p = figure(plot_width=600, plot_height=400, x_axis_label='Araival Traffic Mean (mb/s)', y_axis_label='Total cost ($)', tooltips=TOOLTIPS)
 # p = figure(plot_width=600, plot_height=400, x_axis_label='Araival Traffic Mean (mb/s)', y_axis_label='Total cost ($)', tooltips=TOOLTIPS)
 # p = figure(plot_width=600, plot_height=400, x_axis_label='Vehicles Distribution Standard Deviation', y_axis_label='Total cost ($)', tooltips=TOOLTIPS)
 
@@ -219,9 +220,9 @@ p.yaxis.major_label_text_font_size = "12pt"
 p.legend.location = "bottom_right"
 
 p.output_backend = "svg"
-export_svgs(p, filename="graph/final/vehicle_distribution/500_400_vehicles_L.svg")
+export_svgs(p, filename="graph/final/vehicle_distribution/400_350_vehicles_L.svg")
 
-with open('graph/final/vehicle_distribution/csv/500_400_vehicles_L.csv', 'w', newline='') as csvfile:
+with open('graph/final/vehicle_distribution/csv/400_350_vehicles_L.csv', 'w', newline='') as csvfile:
 
     # space for delimiter
     writer = csv.writer(csvfile, delimiter=' ')

@@ -74,7 +74,11 @@ class Fog:
         if self.computation_latency(traffic, used_vehicles) > max_latency:
 
             # bisection method variation
-            self.max_traffic = self.bisection_method(traffic, used_vehicles, max_latency, least_error)
+            temp = self.bisection_method(traffic, used_vehicles, max_latency, least_error)
+            if temp > 0:
+                self.max_traffic = temp
+            else:
+                self.max_traffic = 0
 
         else:
             self.max_traffic = traffic

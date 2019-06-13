@@ -24,6 +24,7 @@ total_edge_cost_list    = []
 total_fog_cost_list     = []
 server_num              = 1
 traffic                 = 200
+loop                    = 100
 
 for fog_cost in range(1, 21):
     # Variable: Fog cost
@@ -33,7 +34,8 @@ for fog_cost in range(1, 21):
     total_edge_cost = 0
     total_fog_cost = 0
 
-    for iteration in range(10):
+    for iteration in range(loop):
+        print(str(fog_cost) + "-" + str(iteration))
         traffic_set     = []
         max_servers_set = []
 
@@ -101,12 +103,12 @@ for fog_cost in range(1, 21):
             for p in proposal_list:
                 fog_set[p['f_id']].edge_table.append({'index': p['e_id'], 'used_vehicles': p['used_vehicles'], 'cmp_value': p['cmp_value'], 'traffic': p['traffic']})
 
-            print(proposal_list)
+            # print(proposal_list)
             response_list = []
             for f in fog_set:
                 response_list.append(f.response())
             response = [item for sublist in response_list for item in sublist]
-            print(response)
+            # print(response)
             # This edge gets response from the corresponding fog
             for e in edge_set:
                 if e.available:
@@ -143,9 +145,9 @@ for fog_cost in range(1, 21):
         edge_set.clear()
         fog_set.clear()
 
-    total_edge_cost_list.append(total_edge_cost/10)
-    total_fog_cost_list.append(total_fog_cost/10)
-    total_cost_list.append((total_edge_cost + total_fog_cost)/10)
+    total_edge_cost_list.append(total_edge_cost/loop)
+    total_fog_cost_list.append(total_fog_cost/loop)
+    total_cost_list.append((total_edge_cost + total_fog_cost)/loop)
 
 
 # Graphic Design in Bokeh
@@ -175,9 +177,9 @@ p.yaxis.major_label_text_font_size = "12pt"
 p.legend.location = "top_left"
 
 p.output_backend = "svg"
-export_svgs(p, filename="graph/final/fog_cost/200_1-20_L.svg")
+export_svgs(p, filename="graph/final/fog_cost/200_1-20_M.svg")
 
-with open('graph/final/fog_cost/csv/200_1-20_L.csv', 'w', newline='') as csvfile:
+with open('graph/final/fog_cost/csv/200_1-20_M.csv', 'w', newline='') as csvfile:
 
     # space for delimiter
     writer = csv.writer(csvfile, delimiter=' ')
