@@ -32,7 +32,7 @@ server_num              = 1
 loop                    = 50
 total_vehicles          = 300
 
-for traffic in range(0, 420, 20):
+for traffic in range(0, 650, 50):
     # Variable: traffic
     xaxis_list.append(traffic)
     
@@ -192,7 +192,7 @@ for traffic in range(0, 420, 20):
                     fog_cost_set = []
                     for f in fog_set:
                         if f.max_vehicles > 0:
-                            fog_cost_set.append({'index': f.index, 'cost': f.cost})
+                            fog_cost_set.append({'index': f.index, 'cost': f.max_vehicles})
                     fog_cost_set.sort(key=lambda b : b['cost'], reverse=False)
 
                     fog_traffic = fog_set[fog_cost_set[0]['index']].trivial_algorithm(edge_traffic_set[0]['traffic'], edge_set[edge_traffic_set[0]['index']].max_latency, edge_set[edge_traffic_set[0]['index']].least_error)
@@ -268,9 +268,9 @@ p.yaxis.major_label_text_font_size = "12pt"
 p.legend.location = "top_left"
 
 p.output_backend = "svg"
-export_svgs(p, filename="graph/final/algo/0-400_normal_L_cost.svg")
+export_svgs(p, filename="graph/final/algo/0-600_normal_L_cost.svg")
 
-with open('graph/final/algo/csv/0-400_normal_L_cost.csv', 'w', newline='') as csvfile:
+with open('graph/final/algo/csv/0-600_normal_L_cost.csv', 'w', newline='') as csvfile:
 
     # space for delimiter
     writer = csv.writer(csvfile, delimiter=' ')
