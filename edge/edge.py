@@ -56,12 +56,14 @@ class Edge:
             self.active_servers     = 0
             self.max_traffic        = 0
             self.latency            = 0
-            self.used               = False
+        self.used               = False
         
     def clearAll(self):
         self.clear()
         for f in self.fog_list:
             f.clear()
+            if f.available == False:
+                f.recover()
 
     def propose(self):
 
@@ -76,11 +78,18 @@ class Edge:
             return {'e_id': self.index, 'f_id': self.preference_list[0]['index'], 'used_vehicles': self.preference_list[0]['used_vehicles'], 'cmp_value': cmp_value, 'traffic': self.fog_traffic}
 
     def confirm(self):
+        print(self.index, self.traffic)
         self.greedy_algortithm(self.traffic, self.max_latency, self.least_error, -1)
-        self.fog_list[self.preference_list[0]['index']].available = False
-        self.traffic = self.traffic - self.fog_list[self.preference_list[0]['index']].max_traffic
+        if self.fog_list[self.preference_list[0]['index']].available == False:
+            self.traffic = self.traffic - self.fog_list[self.preference_list[0]['index']].attach_traffic
+        else:
+            self.traffic = self.traffic - self.fog_list[self.preference_list[0]['index']].max_traffic
+            self.fog_list[self.preference_list[0]['index']].available = False
+        print(self.index, self.traffic)
         if self.traffic > self.least_error:
             self.clearAll()
+        else:
+            self.available = False
         self.preference_list.clear()
         
 
@@ -94,8 +103,13 @@ class Edge:
 
         # Preference for maximum used vehicles after greedy algortithm
         for f in self.fog_list:
-            if f.available and f.used:
-                self.preference_list.append({'index': f.index, 'used_vehicles': f.used_vehicles})
+            if f.used:
+                if f.available == False:
+                    self.preference_list.append({'index': f.index, 'used_vehicles': f.attach_vehicles})
+                else:
+                    self.preference_list.append({'index': f.index, 'used_vehicles': f.used_vehicles})
+        print('edge'+str(self.index))
+        print(self.preference_list)
         self.preference_list.sort(key=lambda p : p['used_vehicles'], reverse=True)
 
     def marginal_value(self):
@@ -107,8 +121,12 @@ class Edge:
         # There is no fog which this edge wants to contend
         if not self.preference_list:
             self.available = False
+            self.clearAll()
             return -1
-        self.fog_traffic = self.fog_list[self.preference_list[0]['index']].max_traffic
+        if self.fog_list[self.preference_list[0]['index']].available == False:
+            self.fog_traffic = self.fog_list[self.preference_list[0]['index']].attach_traffic
+        else:
+            self.fog_traffic = self.fog_list[self.preference_list[0]['index']].max_traffic
         self.clearAll()
 
         # optmized cost in edge and fogs w/o exception fog
@@ -124,17 +142,34 @@ class Edge:
 
         while traffic > least_error:
             # Edge and all of fog would calculate its own maximum traffic
-            if self.available and self.used == False:
+            if self.used == False:
                 self.traffic_algorithm(traffic, max_latency, least_error)
                 bundle_list.append({'id': 'edge', 'traffic': self.max_traffic, 'cost': self.edge_cost(), 'CP': self.max_traffic / self.edge_cost(), 'chosen': False})
 
             for f in self.fog_list:
-                if f.available and f.used == False and f.index != exception_id:
-                    f.traffic_algorithm(traffic, max_latency, least_error)
-                    if f.max_traffic > 0:
-                        bundle_list.append({'id': f.index, 'traffic': f.max_traffic, 'cost': f.fog_cost(), 'CP': f.max_traffic / f.fog_cost(), 'chosen': False})
+                if f.used == False and f.index != exception_id:
+                    if f.available == False:
+                        if f.max_vehicles > 0:
+                            fog_traffic = f.max_traffic
+                            fog_vehicles = f.used_vehicles
+                            print(self.index, f.index, traffic, fog_traffic)
+                            print(fog_vehicles, f.max_vehicles)
+                            f.traffic_algorithm((f.max_traffic + traffic), max_latency, least_error)
+                            f.attach_vehicles = (f.used_vehicles - fog_vehicles)
+                            fog_cost = (f.used_vehicles - fog_vehicles) * f.cost
+                            f.attach_traffic = f.max_traffic - fog_traffic
+                            print(f.used_vehicles)
+                            if f.attach_traffic > 0:
+                                bundle_list.append({'id': f.index, 'traffic': f.attach_traffic, 'cost': fog_cost, 'CP': f.attach_traffic / fog_cost, 'chosen': False})
+                            else:
+                                empty_list.append({'id': f.index, 'traffic': 0, 'cost': 0, 'CP': 0, 'chosen': False})
+
                     else:
-                        empty_list.append({'id': f.index, 'traffic': 0, 'cost': 0, 'CP': 0, 'chosen': False})
+                        f.traffic_algorithm(traffic, max_latency, least_error)
+                        if f.max_traffic > 0:
+                            bundle_list.append({'id': f.index, 'traffic': f.max_traffic, 'cost': f.fog_cost(), 'CP': f.max_traffic / f.fog_cost(), 'chosen': False})
+                        else:
+                            empty_list.append({'id': f.index, 'traffic': 0, 'cost': 0, 'CP': 0, 'chosen': False})
 
             # Sort by CP value
             bundle_list.sort(key=lambda b : b['CP'], reverse=True)
@@ -174,7 +209,10 @@ class Edge:
     def traffic_algorithm(self, traffic, max_latency, least_error):
         
         # start from maximum servers
-        active_servers = self.max_servers
+        if self.available == False:
+            active_servers = self.active_servers + self.max_servers
+        else:
+            active_servers = self.max_servers
 
         # find maximum traffic
         # check arrival traffic is larger than the traffic that can be handle in edge
@@ -227,7 +265,7 @@ class Edge:
             fog_table.add_column (str(f.index), [f.max_traffic, f.max_traffic / self.total_traffic, f.used_vehicles, f.fog_cost(), f.latency])
         fog_data = fog_table.get_string()
 
-        with open('graph/table/Edge' + str(self.index) + '.txt', 'w') as f:
+        with open('graph/table/test/Edge' + str(self.index) + '.txt', 'w') as f:
             f.write("Edge"+ str(self.index) + "\n")
             f.write(edge_data)
             f.write("\nVehicular-Fog\n")

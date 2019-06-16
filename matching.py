@@ -72,7 +72,7 @@ while loop_flag:
 
     # Fog choose the edge from its preference list
     for p in proposal_list:
-        fog_set[p['f_id']].edge_table.append({'index': p['e_id'], 'used_vehicles': p['used_vehicles'], 'cmp_value': p['cmp_value']})
+        fog_set[p['f_id']].edge_table.append({'index': p['e_id'], 'used_vehicles': p['used_vehicles'], 'cmp_value': p['cmp_value'], 'traffic': p['traffic']})
 
     print(proposal_list)
     response_list = []
@@ -91,10 +91,10 @@ while loop_flag:
 
             # Update the vehicles information of fog
             for f in fog_set:
-                if e.fog_list[f.index].available:
-                    e.fog_list[f.index].max_vehicles = f.max_vehicles
-                    if f.max_vehicles == 0:
-                        e.fog_list[f.index].available = False
+                # if e.fog_list[f.index].available:
+                e.fog_list[f.index].max_vehicles = f.max_vehicles
+                if f.max_vehicles == 0:
+                    e.fog_list[f.index].available = False
 
     # Make sure all of preference list would not be empty
     for e in edge_set:

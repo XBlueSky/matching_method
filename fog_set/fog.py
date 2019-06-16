@@ -15,7 +15,8 @@ class Fog:
         self.fog_transmission_rate      = fog_transmission_rate
         self.max_vehicles               = current_vehicles + arrival_rate - departure_rate
         self.used_vehicles              = 0
-        self.sum_used_vehicles          = 0
+        self.attach_vehicles            = 0
+        self.attach_traffic             = 0
         self.traffic                    = 0
     
     def computation_latency(self, traffic, used_vehicles):
@@ -33,13 +34,19 @@ class Fog:
     def fog_capacity(self):
         return self.used_vehicles * self.capacity
     
+    def recover(self):
+        self.max_traffic = self.max_traffic - self.attach_traffic
+        self.used_vehicles =  self.used_vehicles - self.attach_vehicles
+        self.attach_vehicles= 0
+        self.attach_traffic = 0
+
     def clear(self):
         if self.available:
             self.max_traffic    = 0
             self.traffic        = 0
             self.used_vehicles  = 0
             self.latency        = 0
-            self.used           = False
+        self.used           = False
 
     def response(self):
         response_list = []
@@ -67,7 +74,10 @@ class Fog:
     def traffic_algorithm(self, traffic, max_latency, least_error):
         
         # start from maximum vehicles
-        used_vehicles = self.max_vehicles
+        if self.available == False:
+            used_vehicles = self.used_vehicles + self.max_vehicles
+        else:
+            used_vehicles = self.max_vehicles
 
         # find maximum traffic
         # check arrival traffic is larger than the traffic that can be handle in this fog

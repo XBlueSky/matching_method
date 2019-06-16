@@ -125,10 +125,9 @@ for server_num in range(1, 2):
 
                         # Update the vehicles information of fog
                         for f in fog_set:
-                            if e.fog_list[f.index].available:
-                                e.fog_list[f.index].max_vehicles = f.max_vehicles
-                                if f.max_vehicles == 0:
-                                    e.fog_list[f.index].available = False
+                            e.fog_list[f.index].max_vehicles = f.max_vehicles
+                            if f.max_vehicles == 0:
+                                e.fog_list[f.index].available = False
 
                 # Make sure all of preference list would not be empty
                 for e in edge_set:
