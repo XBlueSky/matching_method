@@ -152,15 +152,18 @@ class Edge:
                         if f.max_vehicles > 0:
                             fog_traffic = f.max_traffic
                             fog_vehicles = f.used_vehicles
-                            print(self.index, f.index, traffic, fog_traffic)
-                            print(fog_vehicles, f.max_vehicles)
+                            # print(self.index, f.index, traffic, fog_traffic)
+                            # print(fog_vehicles, f.max_vehicles)
                             f.traffic_algorithm((f.max_traffic + traffic), max_latency, least_error)
                             f.attach_vehicles = (f.used_vehicles - fog_vehicles)
                             fog_cost = (f.used_vehicles - fog_vehicles) * f.cost
                             f.attach_traffic = f.max_traffic - fog_traffic
-                            print(f.used_vehicles)
+                            # print(f.used_vehicles, f.attach_traffic)
                             if f.attach_traffic > 0:
-                                bundle_list.append({'id': f.index, 'traffic': f.attach_traffic, 'cost': fog_cost, 'CP': f.attach_traffic / fog_cost, 'chosen': False})
+                                if fog_cost == 0:
+                                    bundle_list.append({'id': f.index, 'traffic': f.attach_traffic, 'cost': fog_cost, 'CP': math.inf, 'chosen': False})
+                                else:
+                                    bundle_list.append({'id': f.index, 'traffic': f.attach_traffic, 'cost': fog_cost, 'CP': f.attach_traffic / fog_cost, 'chosen': False})
                             else:
                                 empty_list.append({'id': f.index, 'traffic': 0, 'cost': 0, 'CP': 0, 'chosen': False})
 

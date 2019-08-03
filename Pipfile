@@ -8,8 +8,9 @@ verify_ssl = true
 [packages]
 ptable = "*"
 bokeh = "*"
-selenium = "*"
 numpy = "*"
+pyswarm = "*"
+selenium = "*"
 
 [requires]
 python_version = "3.5"
