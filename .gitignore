@@ -1,3 +1,4 @@
 graph/table/
-testcase/*fog*
+testcase/edge_input/
+testcase/fog_input/
 graph/

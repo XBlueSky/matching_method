@@ -64,10 +64,10 @@ def constraints(x, *args):
         constraint_1.append(edge_capacity(n_i[e_i], mu_i[e_i]) - edge_traffic(beta_ij[e_i*fog_num:(e_i+1)*fog_num], traffic[e_i]))
     constraints.append(constraint_1)
 
-    # constraint_2 = []
-    # for f_i in range(fog_num):
-    #     constraint_2.append(fog_capacity(n_j[f_i], mu_j[0]) - fog_traffic(beta_ij[f_i], traffic[0]))
-    # constraints.append(constraint_2)
+    constraint_2 = []
+    for f_i in range(fog_num):
+        constraint_2.append(fog_capacity(n_j[f_i], mu_j[0]) - fog_traffic(beta_ij[f_i], traffic[0]))
+    constraints.append(constraint_2)
 
     constraint_3 = []
     for e_i in range(edge_num):
@@ -81,16 +81,16 @@ def constraints(x, *args):
         constraint_3.append(case_1_latenct(x_i, args_i))
     constraints.append(constraint_3)
     
-    # constraint_4 = []
-    # for f_i in range(fog_num):
-    #     x_i = []
-    #     x_i.append(n_j[f_i])
-    #     x_i.append(beta_ij[f_i])
-    #     args_i = []
-    #     args_i.append(mu_j[0])
-    #     args_i.append(latency[0])
-    #     args_i.append(traffic[0])
-    #     constraint_4.append(case_1_latenct(x_i, args_i))
-    # constraints.append(constraint_4)
+    constraint_4 = []
+    for f_i in range(fog_num):
+        x_i = []
+        x_i.append(n_j[f_i])
+        x_i.append(beta_ij[f_i])
+        args_i = []
+        args_i.append(mu_j[0])
+        args_i.append(latency[0])
+        args_i.append(traffic[0])
+        constraint_4.append(case_1_latenct(x_i, args_i))
+    constraints.append(constraint_4)
 
     return constraints

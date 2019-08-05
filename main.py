@@ -1,85 +1,107 @@
 from edge.edge import Edge
-from fog_set.fog_set import Fog_Set
+from fog_set.fog import Fog
 from constant.constant import Constant
 from argparse import ArgumentParser
 
-parser = ArgumentParser(description= "Greedy Method")
-parser.add_argument("filename", help="testcase file path")
+parser = ArgumentParser(description= "Matching Method")
+parser.add_argument("edge_file", help="testcase file path")
+parser.add_argument("fog_file", help="testcase file path")
 args = parser.parse_args()
 
 # Initial
 
-# Constant: traffic, ratio, max_latency, least_error
-constant = Constant(1000, 0.01, 1, 1)
+# Constant: edge_transmission_rate, fog_transmission_rate, least_error
+constant = Constant(1250, 1250, 1)
 
-# Edge: capacity, max_servers, cost
-edge = Edge(10, 10, 100)
-edge.set_traffic(constant.traffic)
+# Edge: traffic, ratio, max_latency, capacity, max_servers, cost
+edge_set = []
+edge_filename = "testcase/"+args.edge_file
+edge_file = open(edge_filename,'r')
+for i,line in enumerate(edge_file):
+    if i % 6 == 0:
+        traffic_set = list( map( int, line.split()))
+    elif i % 6 == 1:
+        ratio_rate_set = list( map( float, line.split()))
+    elif i % 6 == 2:
+        max_latency_set = list( map( float, line.split()))
+    elif i % 6 == 3:
+        capacity_set = list( map( int, line.split()))
+    elif i % 6 == 4:
+        cost_set = list( map( int, line.split()))
+    else:
+        max_servers_set = list( map( int, line.split()))
+        
+for i in range(len(traffic_set)):
+    edge_set.append(Edge(i, traffic_set[i], ratio_rate_set[i], max_latency_set[i], capacity_set[i], max_servers_set[i], cost_set[i], constant.least_error))
 
-# Fog_Set: ratio, edge_transmission_rate, fog_transmission_rate, capacity, total_fogs, testcase file
-fogs_num = args.filename.split("_")
-file_name = "testcase/"+args.filename
-fog_set = Fog_Set(constant.ratio, 1250, 1250, 125, 5, int(fogs_num[1]), file_name)
-fog_set.set_traffic(constant.traffic)
+edge_file.close()
 
-# 0/1 knapsack problem with (1 − 1/ sqrt(e)) bound
-traffic = constant.traffic
-bundle_list = []
-empty_list = []
-algorithm = 'CP'
+# Fog: capacity, cost, current_vehicles, arrival_rate, departure_rate, edge_transmission_rate, fog_transmission_rate
+fog_set = []
+fog_filename = "testcase/"+args.fog_file
+fog_file = open(fog_filename,'r')
+for i,line in enumerate(fog_file):
+    if i % 5 == 0:
+        capacity_set = list( map( int, line.split()))
+    elif i % 5 == 1:
+        cost_set = list( map( int, line.split()))
+    elif i % 5 == 2:
+        current_vehicles_set = list( map( int, line.split()))
+    elif i % 5 == 3:
+        arrival_rate_set = list( map( int, line.split()))
+    else:
+        departure_rate_set = list( map( int, line.split()))
 
-while traffic > constant.least_error:
-    # Edge and all of fog would calculate its own maximum traffic
-    if edge.used == False:
-        edge.algorithm(traffic, constant.max_latency, constant.least_error)
-        bundle_list.append({'id': 'edge', 'traffic': edge.max_traffic, 'cost': edge.edge_cost(), 'CP': edge.max_traffic / edge.edge_cost(), 'chosen': False})
+for i in range(len(capacity_set)):
+    fog_set.append(Fog(i, capacity_set[i], cost_set[i], current_vehicles_set[i], arrival_rate_set[i], departure_rate_set[i], constant.edge_transmission_rate, constant.fog_transmission_rate))
+    for e in edge_set:
+        e.append_fog_list(i, capacity_set[i], cost_set[i], current_vehicles_set[i], arrival_rate_set[i], departure_rate_set[i], constant.edge_transmission_rate, constant.fog_transmission_rate)
+fog_file.close()
 
-    for f in fog_set.fog_list:
-        if f.used == False:
-            f.algorithm(traffic, constant.max_latency, constant.least_error, algorithm)
-            if f.max_traffic > 0:
-                bundle_list.append({'id': f.index, 'traffic': f.max_traffic, 'cost': f.fog_cost(), 'CP': f.max_traffic / cost, 'chosen': False})
+# Matching method
+loop_flag = True
+while loop_flag:
+
+    # Edge makes a proposal to fog with its marginal value
+    proposal_list = []
+    for e in edge_set:
+        if e.available:
+            proposal = e.propose()
+            if proposal is not None:
+                proposal_list.append(proposal)
+
+    # Fog choose the edge from its preference list
+    for p in proposal_list:
+        fog_set[p['f_id']].edge_table.append({'index': p['e_id'], 'used_vehicles': p['used_vehicles'], 'cmp_value': p['cmp_value'], 'traffic': p['traffic']})
+
+    print(proposal_list)
+    response_list = []
+    for f in fog_set:
+        response_list.append(f.response())
+    response = [item for sublist in response_list for item in sublist]
+    print(response)
+    # This edge gets response from the corresponding fog
+    for e in edge_set:
+        if e.available:
+            if e.index in response:
+                e.confirm()
             else:
-                empty_list.append({'id': f.index, 'traffic': 0, 'cost': 0, 'CP': 0, 'chosen': False})
+                e.preference_list.clear()
+                e.clearAll()
 
-    if not bundle_list:
-        if algorithm == 'max':
-            print("There is no enough capacity")
+            # Update the vehicles information of fog
+            for f in fog_set:
+                # if e.fog_list[f.index].available:
+                e.fog_list[f.index].max_vehicles = f.max_vehicles
+                if f.max_vehicles == 0:
+                    e.fog_list[f.index].available = False
+
+    # Make sure all of preference list would not be empty
+    for e in edge_set:
+        if e.available:
+            loop_flag = True
             break
-        else:
-            algorithm = 'max'
-            traffic = constant.traffic
-            bundle_list.clear()
-            edge.clear()
-            fog_set.clear()
-            continue
+        loop_flag = False
 
-    # Sort by CP value
-    bundle_list.sort(key=lambda b : b['CP'], reverse=True)
-    for bundle in bundle_list:
-        if traffic - bundle['traffic'] >= 0 and bundle['traffic'] > 0:
-            traffic = traffic - bundle['traffic']
-            bundle['chosen'] = True
-        else:
-            break
-    
-    for bundle in bundle_list:
-        if bundle['chosen'] == True:
-            if bundle['id'] == 'edge':
-                edge.used = True
-            else:
-                fog_set.fog_list[bundle['id']].used = True
-        else:
-            if bundle['id'] == 'edge':
-                edge.clear()
-            else:
-                fog_set.fog_list[bundle['id']].clear()
-    
-    for empty in empty_list:
-        fog_set.fog_list[empty['id']].clear()
-
-    empty_list.clear()
-    bundle_list.clear()
-
-edge.display()
-fog_set.display()
+for e in edge_set:
+    e.display()

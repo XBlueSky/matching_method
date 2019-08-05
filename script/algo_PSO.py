@@ -43,6 +43,7 @@ for traffic in range(0, 210, 10):
         
         total_edge_cost = 0
         total_fog_cost = 0
+        total_cost = 0
 
         for iteration in range(loop):
             print(str(traffic) + "-" + str(algo_type) + "-" + str(iteration))
@@ -155,8 +156,21 @@ for traffic in range(0, 210, 10):
                             break
                         loop_flag = False
 
+                # Collect total edge cost from edge set
+                for e in edge_set:
+                    # e.display()
+                    total_edge_cost = total_edge_cost + e.edge_cost()
+                
+                # Collect total fog cost from edge set
+                for f in fog_set:
+                    total_fog_cost = total_fog_cost + f.fog_cost()
+
+
+                edge_set.clear()
+                fog_set.clear()
+
             # Particle swarm optimization (PSO)
-            if algo_type == 1 and traffic > 0:
+            else:
                 lower_bound = [0] * (len(edge_set) + len(fog_set) + len(edge_set) * len(fog_set))
                 upper_bound = []
                 args        = []
@@ -181,32 +195,20 @@ for traffic in range(0, 210, 10):
                 for e in edge_set:
                     args.append(e.max_latency)
 
-                xopt, fopt = pso(objective_func, lower_bound, upper_bound, f_ieqcons=constraints, args=args)
-            
-            # Collect total edge cost from edge set
-            for e in edge_set:
-                # e.display()
-                total_edge_cost = total_edge_cost + e.edge_cost()
-            
-            # Collect total fog cost from edge set
-            for f in fog_set:
-                total_fog_cost = total_fog_cost + f.fog_cost()
-
-            # print(total_fog_cost)
-
-            edge_set.clear()
-            fog_set.clear()
+                if algo_type == 1:
+                    xopt, fopt = pso(objective_func, lower_bound, upper_bound, f_ieqcons=constraints, args=args, maxiter=500)
+                else:
+                    xopt, fopt = pso(objective_func, lower_bound, upper_bound, f_ieqcons=constraints, args=args, maxiter=50)
+                total_cost = total_cost + fopt
 
         if algo_type == 0:
             # total_edge_list.append(total_edge_cost / loop)
             # total_fog_list.append(total_fog_cost / loop)
             total_list.append((total_edge_cost + total_fog_cost) / loop)
         elif algo_type == 1:
-            # total_edge_list_2.append(total_edge_cost / loop)
-            # total_fog_list_2.append(total_fog_cost / loop)
-            total_list_2.append((total_edge_cost + total_fog_cost) / loop)
+            total_list_2.append(total_cost / loop)
         else:
-            total_list_3.append((total_edge_cost + total_fog_cost) / loop)
+            total_list_3.append(total_cost / loop)
             
                 
 
@@ -224,24 +226,12 @@ p = figure(plot_width=600, plot_height=400, x_axis_label='Araival Traffic Mean (
 
 # Default
 p.line(xaxis_list, total_list, legend="multi-EVF matching", line_width=2, line_color="red")
-p.line(xaxis_list, total_list_2, legend="straightforward(number)", line_width=1, line_color="tomato")
-p.line(xaxis_list, total_list_3, legend="straightforward(cost)", line_width=1, line_color="orange")
+p.line(xaxis_list, total_list_2, legend="PSO(maxiter: 500)", line_width=1, line_color="tomato")
+p.line(xaxis_list, total_list_3, legend="PSO(maxiter: 50)", line_width=1, line_color="orange")
 
 p.circle(xaxis_list, total_list, legend="multi-EVF matching", fill_color="red", line_color="red", size=7)
-p.x(xaxis_list, total_list_2, legend="straightforward(number)", line_color="tomato", size=5)
-p.circle(xaxis_list, total_list_3, legend="straightforward(cost)", fill_color="white", line_color="orange", size=5)
-
-# p.line(xaxis_list, total_list, legend="Total cost by Matching", line_width=2, line_color="red")
-# p.line(xaxis_list, total_edge_list, legend="Edge cost by Matching", line_width=1, line_color="tomato")
-# p.line(xaxis_list, total_fog_list, legend="Fog cost by Matching", line_width=1, line_color="orange")
-
-# p.circle(xaxis_list, total_list, legend="Total cost by Matching", fill_color="red", line_color="red", size=7)
-# p.x(xaxis_list, total_edge_list, legend="Edge cost by Matching", line_color="tomato", size=5)
-# p.circle(xaxis_list, total_fog_list, legend="Fog cost by Matching", fill_color="white", line_color="orange", size=5)
-
-# p.line(xaxis_list, total_list_2, legend="Total cost by Trivial", line_width=3, line_dash='solid')
-# p.line(xaxis_list, total_edge_list_2, legend="Edge cost by Trivial", line_width=2, line_color="dodgerblue" ,line_dash='dotted')
-# p.line(xaxis_list, total_fog_list_2, legend="Fog cost by Trivial", line_width=2, line_color="deepskyblue", line_dash="dashdot")
+p.x(xaxis_list, total_list_2, legend="PSO(maxiter: 500)", line_color="tomato", size=5)
+p.circle(xaxis_list, total_list_3, legend="PSO(maxiter: 50)", fill_color="white", line_color="orange", size=5)
 
 p.xaxis.axis_label_text_font_size = "15pt"
 p.yaxis.axis_label_text_font_size = "15pt"
@@ -250,15 +240,15 @@ p.yaxis.major_label_text_font_size = "12pt"
 p.legend.location = "top_left"
 
 p.output_backend = "svg"
-export_svgs(p, filename="graph/final/algo/straightforward/0-200_M_S_cost.svg")
+export_svgs(p, filename="graph/final/algo/pso/0-200_M_S_cost.svg")
 
-with open('graph/final/algo/straightforward/csv/0-200_M_S_cost.csv', 'w', newline='') as csvfile:
+with open('graph/final/algo/pso/csv/0-200_M_S_cost.csv', 'w', newline='') as csvfile:
 
     # space for delimiter
     writer = csv.writer(csvfile, delimiter=' ')
 
     # writer.writerow(['Traffic', 'Total cost by Matching', 'Edge cost by Matching', 'Fog cost by Matching', 'Total cost by Trivial', 'Edge cost by Trivial', 'Fog cost by Trivial'])
-    writer.writerow(['Traffic', 'multi-EVF matching', 'straightforward(number)', 'straightforward(cost)'])
+    writer.writerow(['Traffic', 'multi-EVF matching', 'PSO(maxiter: 500)', 'PSO(maxiter: 50)'])
     
     for i in range(len(xaxis_list)):
         # writer.writerow([xaxis_list[i], total_list[i], total_edge_list[i], total_fog_list[i], total_list_2[i], total_edge_list_2[i], total_fog_list_2[i]])
